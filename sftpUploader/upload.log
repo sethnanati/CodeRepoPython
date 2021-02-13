@@ -1,0 +1,4 @@
+2021-02-13 10:39:23,014 INFO STARTING RENDITION FOR: 03_20210212
+2021-02-13 10:39:23,015 DEBUG getdate: 03_20210212
+2021-02-13 10:39:23,015 DEBUG Starting NIBSS Connection:
+2021-02-13 10:39:26,119 DEBUG Error: Unable to connect, [Errno 8] nodename nor servname provided, or not known

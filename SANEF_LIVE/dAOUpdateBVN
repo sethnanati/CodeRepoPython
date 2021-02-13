@@ -1,0 +1,61 @@
+from time import sleep
+
+import cx_Oracle
+import config as dbconn
+from datetime import datetime
+import re
+
+
+def getDAOTestAgency():
+    # Get Date for Application and Database Timestamp
+    datatime = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    print(datatime)
+
+    # Get the sql connection for AGENCY Database
+    agentConnection = dbconn.getDAOConnectionAgency()
+    cursor = agentConnection.cursor()
+
+    # Get the sql connection for SANEF Database
+    sanefConnection = dbconn.getSanefDBConnection()
+    cursor2 = sanefConnection.cursor()
+
+    # Get the sql connection for BVN(reporting server) Database
+    bvnConnection = dbconn.getConnectionBVN()
+    cursor3 = bvnConnection.cursor()
+
+    try:
+        # get rows with null bvn values
+        sql1 = "SELECT A.CUSTOMER_NO, A.CUSTOMER_NAME1, A.UDF_2, B.CUST_AC_NO  FROM FCUBSNIG.STTM_CUSTOMER A, FCUBSNIG.STTM_CUST_ACCOUNT B WHERE A.CUSTOMER_NO = B.CUST_NO AND CUST_AC_NO = :min"+")"
+        #sql1 = "SELECT CUST_NO, CUST_AC_NO, AC_DESC FROM FCUBSNIG.STTM_CUST_ACCOUNT WHERE CUST_AC_NO = :min"
+        #sql2 = "SELECT CUSTOMER_NO, CUSTOMER_NAME1, UDF_2 FROM FCUBSNIG.STTM_CUSTOMER WHERE CUSTOMER_NO = :min2"
+        sql3 = "UPDATE SanefRequest set BVN = :min3 where additionalinfo1 = :min4"
+
+        getAccountNoQuery = cursor2.execute("Select additionalinfo1 FROM SanefRequest where bvn is NULL")
+
+        # Fetch BVN using Account number
+        for row in getAccountNoQuery:
+            getsttm_cust_account = cursor3.execute(sql1, {'min': row[0]})
+            #for arow in getsttm_cust_account:
+             #   getBVN = cursor3.execute(sql2, {'min2': arow[0]})
+            for bvn in getsttm_cust_account:
+                print(bvn[2],row[0])
+                cursor2.execute(sql3, {'min3': bvn[2], 'min4': row[0]})
+
+                sanefConnection.commit()
+                bvnConnection.commit()
+
+    except dbconn.getSanefDBConnection().DatabaseError as e:
+        print('Something wrong, please check:', e)
+
+
+    finally:
+        cursor2.close()
+        # Close the connection
+        sanefConnection.close()
+        bvnConnection.close()
+
+
+#getDAOTestAgency()
+
+
+
